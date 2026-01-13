@@ -36,6 +36,12 @@ class TechIndicatorEngine:
             return "SELL (Trend Down or Overbought)"
         else:
             return "HOLD"
+        
+    def generate_signals(self, df):
+        df['signal'] = 'HOLD'
+        df.loc[(df['sma_fast'] > df['sma_slow']) & (df['rsi'] < 70), 'signal'] = 'BULLISH'
+        df.loc[(df['sma_fast'] < df['sma_slow']) | (df['rsi'] > 70), 'signal'] = 'BEARISH'
+        return df
 
 engine = TechIndicatorEngine('BTC/USDT')
 data = engine.fetch_historical_ohlcv()
@@ -44,3 +50,9 @@ data_with_indicators = engine.apply_indicators(data)
 print("\n--- Latest Analysis ---")
 print(data_with_indicators[['timestamp', 'close', 'sma_fast', 'rsi']].tail(5))
 print(f"\nCURRENT SIGNAL: {engine.get_signal(data_with_indicators)}")
+
+data = engine.fetch_historical_ohlcv()
+data = engine.apply_indicators(data)
+data = engine.generate_signals(data)
+data.to_csv("btc_history.csv", index=False)
+print("Saved 100 candles with signals to btc_history.csv")
